@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fragebogen</title>
+    <title>Die vier Prioritäten Fragebogen</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        table {
-            width: 100%;
+        th {
+            text-align: center;
+            vertical-align: middle;
         }
 
-        th, td {
-            text-align: center;
+        td {
             vertical-align: middle;
         }
     </style>
 </head>
 <body>
-<div class="container my-5">
+<div class="container justify-content-center">
     <h1 class="text-center mb-4">Die vier Prioritäten</h1>
     <form id="fragebogenForm">
-        <table class="table">
-            <thead class="thead-dark">
+        <table class="table table-sm table-striped">
+            <thead>
             <tr>
                 <th scope="col">Aussage</th>
                 <th scope="col">Stimmt</th>
@@ -30,72 +30,32 @@
             </tr>
             </thead>
             <tbody id="tabelle-fragebogen">
-            <!-- Dynamisch generiert -->
             </tbody>
         </table>
     </form>
-    <div class="d-flex justify-content-center">
-        <button class="btn btn-primary btn-lg mt-4 mb-4" onclick="calc()">Auswerten</button>
+    <div class="d-flex justify-content-center ml-0 mr-0">
+        <button class="btn btn-primary btn-lg mt-4 mb-4 w-50" onclick="eval()">Auswerten</button>
     </div>
-
-    <table class="table" id="tabelle-ergebnisse" style="visibility: hidden">
-        <thead>
-        <tr>
-            <th></th>
-            <th>Überlegenheit</th>
-            <th>Kontrolle</th>
-            <th>Gefallen wollen</th>
-            <th>Bequemlichkeit</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <th>Punkte:</th>
-            <td>
-                <div id="punkte-u"></div>
-            </td>
-            <td>
-                <div id="punkte-k"></div>
-            </td>
-            <td>
-                <div id="punkte-g"></div>
-            </td>
-            <td>
-                <div id="punkte-b"></div>
-            </td>
-        </tr>
-        <tr>
-            <th>Probleme:</th>
-            <td>
-                <div id="probleme-u"></div>
-            </td>
-            <td>
-                <div id="probleme-k"></div>
-            </td>
-            <td>
-                <div id="probleme-g"></div>
-            </td>
-            <td>
-                <div id="probleme-b"></div>
-            </td>
-        </tr>
-
-        </tbody>
+    <div id="missing-answer-caption-div"></div>
+    <div id="missing-answer-list-div"></div>
+    <table class="table table-sm" id="tabelle-ergebnisse">
+        <thead id="tabelle-res-head"></thead>
+        <tbody id="tabelle-res-body"></tbody>
     </table>
 </div>
 
 <script>
     const fragen = [
-        "Ich habe Angst bedeutungslos zu sein.",
+        "Ich habe Angst, bedeutungslos zu sein.",
         "Ich erlebe mich oft in einem Abstand von anderen Menschen.",
         "Ich strenge mich an, damit ich von möglichst vielen akzeptiert werde.",
         "Ich lasse mir gerne helfen.",
         "Weil ich nicht eine/r unter vielen sein will, ist es mir wichtig, aus der Masse herauszuragen.",
-        "Mit meinen Gefühlen bin ich ziemlich zurückhaltend, d.h. ich sage lieber was ich denke als was ich fühle.",
+        "Mit meinen Gefühlen bin ich ziemlich zurückhaltend, d.h. ich sage lieber was ich denke, als was ich fühle.",
         "Mir geht oft die Frage durch den Kopf, ob die Leute mich wohl mögen, und ob ich willkommen bin.",
         "Unruhe, Hast, Störungen und Veränderungen können mich derart stören, dass ich mich ganz unwohl fühle.",
-        "Ich spüre in mir ein Streben nach „besser sein“ als andere. Dafür strenge ich mich auch an.",
-        "Ich glaube, ich kann mich nicht gut anvertrauen, nicht „fallen lassen“.",
+        "Ich spüre in mir ein Streben nach \"besser sein\" als andere. Dafür strenge ich mich auch an.",
+        "Ich glaube, ich kann mich nicht gut anvertrauen, nicht \"fallen lassen\".",
         "Ich glaube, die Angst abgelehnt zu werden, ist bei mir sehr stark.",
         "Ich möchte in Ruhe gelassen werden.",
         "Für meine Art zu leben, zahle ich den Preis, dass ich zu viel tun und zu viel Verantwortung tragen muss.",
@@ -116,12 +76,11 @@
         "Im Grunde ist mein tiefster Wunsch, ein bequemes Leben zu haben ohne viele Konflikte."
     ];
 
-    // Tabelle generieren
     const tbody = document.getElementById("tabelle-fragebogen");
     fragen.forEach((frage, index) => {
         const row = document.createElement("tr");
         row.innerHTML = `
-                <td>${frage}</td>
+                <td><b>${index + 1}</b>. ${frage}</td>
                 <td>
                     <div class="btn-group" role="group">
                         <input type="radio" class="btn-check" name="frage${index}" id="btnradio1-frage${index}" autocomplete="off" value="1" required>
@@ -144,49 +103,150 @@
                     </div>
                 </td>
             `;
-
         tbody.appendChild(row);
     });
 
-    // Auswertung
-    function calc() {
-        const formData = new FormData(document.getElementById("fragebogenForm"));
-        
-        const punkte = fragen.map((_, index) => parseFloat(formData.get(`frage${index}`)) || 0);
-        let punkte_u = 0;
-        let punkte_k = 0;
-        let punkte_g = 0;
-        let punkte_b = 0;
-        for (let i = 0; i < fragen.length; ++i) {
-            if (i % 4 === 0) punkte_u += punkte[i];
-            else if (i % 4 === 1) punkte_k += punkte[i];
-            else if (i % 4 === 2) punkte_g += punkte[i];
-            else if (i % 4 === 3) punkte_b += punkte[i];
-        }
-        document.getElementById("punkte-u").textContent = punkte_u;
-        document.getElementById("punkte-k").textContent = punkte_k;
-        document.getElementById("punkte-g").textContent = punkte_g;
-        document.getElementById("punkte-b").textContent = punkte_b;
+    function make_table_results() {
+        const thead = document.getElementById("tabelle-res-head");
+        thead.innerHTML = "";
+        const tbody = document.getElementById("tabelle-res-body");
+        tbody.innerHTML = "";
 
-        const probleme = fragen.map((_, index) => parseFloat(formData.get(`problem${index}`)) || 0);
-        let probleme_u = 0;
-        let probleme_k = 0;
-        let probleme_g = 0;
-        let probleme_b = 0;
-        for (let i = 0; i < fragen.length; ++i) {
-            if (i % 4 === 0) probleme_u += probleme[i];
-            else if (i % 4 === 1) probleme_k += probleme[i];
-            else if (i % 4 === 2) probleme_g += probleme[i];
-            else if (i % 4 === 3) probleme_b += probleme[i];
+        const width_tiny = 552;
+        if (window.innerWidth > width_tiny) {
+            thead.innerHTML = `
+                <tr>
+                    <th></th>
+                    <th class="text-center">Überlegenheit</th>
+                    <th class="text-center">Kontrolle</th>
+                    <th class="text-center">Gefallen</th>
+                    <th class="text-center">Bequemlichkeit</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = `
+                <tr>
+                    <th class="text-end">Punkte:</th>
+                    <td class="text-center" id="punkte-u"></td>
+                    <td class="text-center" id="punkte-k"></td>
+                    <td class="text-center" id="punkte-g"></td>
+                    <td class="text-center" id="punkte-b"></td>
+                </tr>
+                <tr>
+                    <th class="text-end">Probleme:</th>
+                    <td class="text-center" id="probleme-u"></td>
+                    <td class="text-center" id="probleme-k"></td>
+                    <td class="text-center" id="probleme-g"></td>
+                    <td class="text-center" id="probleme-b"></td>
+                </tr>
+            `;
+        } else {
+            thead.innerHTML = `
+                <tr>
+                    <th></th>
+                    <th class="text-center">Punkte</th>
+                    <th class="text-center">Probleme</th>
+                </tr>
+            `;
+
+            tbody.innerHTML = `
+                <tr>
+                    <td class="text-end fw-bold">Überlegenheit:</td>
+                    <td class="text-center" id="punkte-u"></td>
+                    <td class="text-center" id="probleme-u"></td>
+                </tr>
+                <tr>
+                    <td class="text-end fw-bold">Kontrolle:</td>
+                    <td class="text-center" id="punkte-k"></td>
+                    <td class="text-center" id="probleme-k"></td>
+                </tr>
+                <tr>
+                    <td class="text-end fw-bold">Gefallen:</td>
+                    <td class="text-center" id="punkte-g"></td>
+                    <td class="text-center" id="probleme-g"></td>
+                </tr>
+                <tr>
+                    <td class="text-end fw-bold">Bequemlichkeit:</td>
+                    <td class="text-center" id="punkte-b"></td>
+                    <td class="text-center" id="probleme-b"></td>
+                </tr>
+            `;
         }
-        document.getElementById("probleme-u").textContent = probleme_u;
-        document.getElementById("probleme-k").textContent = probleme_k;
-        document.getElementById("probleme-g").textContent = probleme_g;
-        document.getElementById("probleme-b").textContent = probleme_b;
+    }
+
+    function eval() {
+        make_table_results();
+
+        const formData = new FormData(document.getElementById("fragebogenForm"));
+
+        function count_points(str) {
+            const data = fragen.map((_, index) => parseFloat(formData.get(str + `${index}`)) || 0);
+            let res = [0, 0, 0, 0];
+            for (let i = 0; i < fragen.length; ++i) {
+                if (i % 4 === 0) res[0] += data[i];
+                else if (i % 4 === 1) res[1] += data[i];
+                else if (i % 4 === 2) res[2] += data[i];
+                else if (i % 4 === 3) res[3] += data[i];
+            }
+            return res;
+        }
+
+        const punkte = count_points('frage');
+        document.getElementById("punkte-u").textContent = punkte[0].toString();
+        document.getElementById("punkte-k").textContent = punkte[1].toString();
+        document.getElementById("punkte-g").textContent = punkte[2].toString();
+        document.getElementById("punkte-b").textContent = punkte[3].toString();
+
+        const probleme = count_points('problem');
+        document.getElementById("probleme-u").textContent = probleme[0].toString();
+        document.getElementById("probleme-k").textContent = probleme[1].toString();
+        document.getElementById("probleme-g").textContent = probleme[2].toString();
+        document.getElementById("probleme-b").textContent = probleme[3].toString();
+
+        function get_missing_entries() {
+            const data_q = fragen.map((_, index) => parseFloat(formData.get(`frage${index}`)));
+            const data_p = fragen.map((_, index) => parseFloat(formData.get(`problem${index}`)));
+            let res = [];
+            for (let i = 0; i < fragen.length; ++i) {
+                if (isNaN(data_q[i]) || isNaN(data_p[i])) {
+                    res.push(i + 1);
+                }
+            }
+            return res;
+        }
+
+        const div_missing_caption = document.getElementById("missing-answer-caption-div");
+        div_missing_caption.innerHTML = "";
+        div_missing_caption.className = "";
+        const div_missing_list = document.getElementById("missing-answer-list-div");
+        div_missing_list.innerHTML = "";
+        div_missing_list.className = "";
+
+        const missing_answers = get_missing_entries('frage');
+        if (missing_answers.length !== 0) {
+            let str = "";
+            for (let i = 0; i < missing_answers.length; ++i) {
+                str += missing_answers[i].toString();
+                if (i !== missing_answers.length - 1) {
+                    str += ", ";
+                }
+            }
+
+            div_missing_caption.className = "d-flex justify-content-center mb-1";
+            const caption = document.createElement("div");
+            caption.className = "text-center text-danger";
+            caption.innerHTML = "<b>Unvollständige Antwort in den Fragen</b>:";
+            div_missing_caption.appendChild(caption);
+
+            div_missing_list.className = "d-flex justify-content-center mb-4";
+            const list = document.createElement("div");
+            list.className = "text-center text-danger";
+            list.innerHTML = str;
+            div_missing_list.appendChild(list);
+        }
 
         document.getElementById("tabelle-ergebnisse").style.visibility = "visible";
     }
 </script>
 </body>
 </html>
-
